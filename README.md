@@ -1,8 +1,9 @@
 # GRADUATE
 
+## Installation
+
+---
 ## Step1. Training
-
-
 ```shell
 $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore train.py <arguments>...
 ```
