@@ -20,20 +20,56 @@ $ pip install .
 
 ---
 ### Training
+* Model arguments:
+  - **Time domain branch**: ```conformer_class```, ```d_ffn```, ```d_model```, ```nhead```, ```enc_layers```, ```dropout```
+  - **Time-frequency domain branch**: ```stft_recovertype```, ```max_freq```
+  - **Decoder**: ```dec_layers```, ```rep_KV```, ```dualDomain_type```
+  - **Others**: ```label_type```, ```wavelength```, ```ablation```
+* Training arguments:
+  - **Checkpoint name**: ```save_path```
+  - **Training with data augmentations**: ```aug```
+  - **Filtering the dataset**: ```level```, ```instrument```, and ```location``` for CWB, ```filter_instance``` for INSTANCE,
+  - **Dataset**: ```dataset_opt```
+  - **Model type**: ```model_opt```
+
 ```shell
 $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore train.py <arguments>...
 ```
 
-### Finding best picking criteria on validation set
+### Evaluate the picker
+* Scenario 1: Finding the best criteria on validation set
+
 ```shell
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py <arguments>...
+$ python average_checkpoints.py --save_path <checkpoint-name> -n <number-of-checkpoints-to-average>
+
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --load_specific_model averaged_checkpoint/
+  <arguments>...
 ```
 
+* (Optional) Scenario 2: Testing the model on testing set only 
+```shell
+$ python average_checkpoints.py --save_path <checkpoint-name> -n <number-of-checkpoints-to-average>
+
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --load_specific_model averaged_checkpoint/
+  --threshold_type <type-of-threshold> --threshold_prob_start <probability-of-threshold> --threshold_trigger_start <trigger-sample-of-threshold>/
+  --p_timestep <fixed-parrival-at-timestep> --do_test True <arguments>...
+```
 
 ### Testing the model on different P-arrival time
+* Arguments:
+  - **Testing on multiple P-phase arrival**: ```allTest```
+
 ```shell
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --allTest True\
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --allTest True --load_specific_model averaged_checkpoint/
   --threshold_type <type-of-criteria> --threshold_prob_start <prob-of-criteria> --threshold_trigger_start <trigger-sample-of-criteria>\
   <arguments>...
+```
+
+---
+### (Appendix) Using different characteristic of dataset for analyzing the model
+* 自己研究
+
+```shell
+$ cd analyze
 ```
 
