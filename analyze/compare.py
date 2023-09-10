@@ -42,21 +42,21 @@ if __name__ == '__main__':
     intersection = resA.intersection(resB)
     Bno = resA - resB
     Ano = resB - resA
-    print(f"resA: {len(resA)}, resB: {len(resB)}")
+    print(f"{opt.compareA}: {len(resA)}, {opt.compareB}: {len(resB)}")
     print(f"Both {opt.test_case}: {len(intersection)}")
-    print(f"A {opt.test_case}, but B does not: {len(Bno)}")
-    print(f"B {opt.test_case}, but A does not: {len(Ano)}")
+    print(f"{opt.compareA} {opt.test_case}, but {opt.compareB} does not: {len(Bno)}")
+    print(f"{opt.compareB} {opt.test_case}, but {opt.compareA} does not: {len(Ano)}")
 
     with open(logpath, 'a') as f:
-        f.write(f"resA: {len(resA)}, resB: {len(resB)}\n")
+        f.write(f"{opt.compareA}: {len(resA)}, {opt.compareB}: {len(resB)}\n")
         f.write(f"Both {opt.test_case}: {len(intersection)}\n")
-        f.write(f"A {opt.test_case}, but B does not: {len(Bno)}\n")
-        f.write(f"B {opt.test_case}, but A does not: {len(Ano)}\n")
+        f.write(f"{opt.compareA} {opt.test_case}, but {opt.compareB} does not: {len(Bno)}\n")
+        f.write(f"{opt.compareB} {opt.test_case}, but {opt.compareA} does not: {len(Ano)}\n")
         f.write('-'*50)
         f.write('\n')
         f.write(f"intersection: {intersection}\n")
-        f.write(f"only A {opt.test_case}: {Bno}\n")
-        f.write(f"only B {opt.test_case}: {Ano}\n")
+        f.write(f"only {opt.compareA} {opt.test_case}: {Bno}\n")
+        f.write(f"only {opt.compareB} {opt.test_case}: {Ano}\n")
         f.write('-'*50)
         f.write('\n')
         
