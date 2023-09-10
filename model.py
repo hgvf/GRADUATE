@@ -137,6 +137,8 @@ class GRADUATE(nn.Module):
         # =========================================== #
         #        Time-frequency domain branch         #
         # =========================================== #
+        self.stft_recovertype = stft_recovertype
+        
         if ablation != 'time-frequency':
             if stft_recovertype == 'crossattn':
                 self.stft_posEmb = PositionalEncoding(dim_stft, max_len=wavelength//4-1, return_vec=True)
@@ -192,8 +194,6 @@ class GRADUATE(nn.Module):
         # =========================================== #
         #                   Decoder                   #
         # =========================================== #    
-        self.decoder_type = decoder_type
-
         self.decoder = nn.ModuleList([cross_attn_layer(nhead, conformer_class//nhead, conformer_class//nhead, conformer_class, conformer_class, d_ffn)
                                         for _ in range(dec_layers)]
                                         )
@@ -219,7 +219,7 @@ class GRADUATE(nn.Module):
         wave = wave.permute(0,2,1)
     
         if self.ablation != 'time':
-            out, _ = self.conformer(wave, self.wavelength)
+            out, _ = self.Time(wave, self.wavelength)
         
         if self.ablation != 'time-frequency':
             if self.stft_recovertype == 'crossattn':

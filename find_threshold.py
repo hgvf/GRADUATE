@@ -59,12 +59,12 @@ def parse_args():
     parser.add_argument('--loading_method', type=str, default='full')
     
     # custom hyperparameters
-    parser.add_argument('--conformer_class', type=int, default=16)
-    parser.add_argument('--d_ffn', type=int, default=256)
+    parser.add_argument('--conformer_class', type=int, default=8)
+    parser.add_argument('--d_ffn', type=int, default=128)
     parser.add_argument('--d_model', type=int, default=12)
     parser.add_argument('--nhead', type=int, default=4)
-    parser.add_argument('--enc_layers', type=int, default=4)
-    parser.add_argument('--dec_layers', type=int, default=4)
+    parser.add_argument('--enc_layers', type=int, default=2)
+    parser.add_argument('--dec_layers', type=int, default=1)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--label_type', type=str, default='p')
 
@@ -129,12 +129,8 @@ def evaluation(pred, gt, snr_idx, snr_max_idx, intensity_idx, intensity_max_idx,
         gt_isTrigger = False
         gt_trigger = 0
 
-        if isREDPAN_dataset:
-            snr_cur = 0
-            intensity_cur = 0
-        else:
-            snr_cur = snr_idx[i]
-            intensity_cur = intensity_idx[i]
+        snr_cur = snr_idx[i]
+        intensity_cur = intensity_idx[i]
         
         if not np.all(gt[i] == 0):
             gt_isTrigger = True            
@@ -349,8 +345,8 @@ def inference(opt, model, test_loader, device):
             idx += 1        
 
             # calcuate SNR & intensity
-            snr_total += calc_snr(data, isREDPAN)
-            intensity_total += calc_inten(data, isREDPAN)
+            snr_total += calc_snr(data)
+            intensity_total += calc_inten(data)
 
             with torch.no_grad():
                 if opt.model_opt == 'GRADUATE':
@@ -380,7 +376,8 @@ def inference(opt, model, test_loader, device):
                 else:
                     pred += [out]
                     gt += [target]
-
+            if idx > 5:
+                break
     return pred, gt, snr_total, intensity_total
 
 def score(pred, gt, snr_total, intensity_total, mode, opt, threshold_prob, threshold_trigger, isTest=False):

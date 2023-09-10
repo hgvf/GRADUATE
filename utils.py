@@ -75,7 +75,8 @@ def apply_filter(data, isCWBSN=False, level=-1, isStead=False, isNoise=False, in
             complete_mask = data.metadata['trace_completeness'] == 1
 
         # 只選包含一個事件的 trace
-        single_mask = data.metadata['trace_event_number'] == 1
+        # single_mask = data.metadata['trace_event_number'] == 1
+        single_mask = data.metadata['trace_number_of_event'] == 1
 
         # making final mask
         mask = np.logical_and(single_mask, complete_mask)
@@ -196,7 +197,6 @@ def basic_augmentations(opt, ptime=None, test=False):
                     sbg.Normalize(demean_axis=-1, amp_norm_axis=-1, amp_norm_type='std', keep_ori=True),
                     sbg.STFT(max_freq=opt.max_freq),
                     sbg.CharStaLta(),
-                    sbg.TemporalSegmentation(n_segmentation=opt.n_segmentation, null=seg_null),
                     sbg.ChangeDtype(np.float32),
                     sbg.ProbabilisticLabeller(label_columns=phase_dict, sigma=10, dim=0),
                 ]
@@ -209,7 +209,6 @@ def basic_augmentations(opt, ptime=None, test=False):
                     sbg.Filter(N=5, Wn=[1, 10], btype='bandpass', keep_ori=True),
                     sbg.STFT(max_freq=opt.max_freq),
                     sbg.CharStaLta(),
-                    sbg.TemporalSegmentation(n_segmentation=opt.n_segmentation, null=seg_null),
                     sbg.ChangeDtype(np.float32),
                     sbg.ProbabilisticLabeller(label_columns=phase_dict, sigma=10, dim=0),
                 ]
@@ -221,7 +220,6 @@ def basic_augmentations(opt, ptime=None, test=False):
                         sbg.Normalize(demean_axis=-1, amp_norm_axis=-1, amp_norm_type='std'),
                         sbg.STFT(max_freq=opt.max_freq),
                         sbg.CharStaLta(),
-                        sbg.TemporalSegmentation(n_segmentation=opt.n_segmentation, null=seg_null),
                         sbg.ChangeDtype(np.float32),
                         sbg.ProbabilisticLabeller(label_columns=phase_dict, sigma=10, dim=0),
                 ]
@@ -234,7 +232,6 @@ def basic_augmentations(opt, ptime=None, test=False):
                         sbg.Filter(N=5, Wn=[1, 10], btype='bandpass'),
                         sbg.STFT(max_freq=opt.max_freq),
                         sbg.CharStaLta(),
-                        sbg.TemporalSegmentation(n_segmentation=opt.n_segmentation, null=seg_null),
                         sbg.ChangeDtype(np.float32),
                         sbg.ProbabilisticLabeller(label_columns=phase_dict, sigma=10, dim=0),
                 ]
@@ -253,7 +250,7 @@ def load_model(opt, device):
         model = sbm.PhaseNet(in_channels=3, classes=3, phases='NPS')
     elif opt.model_opt == 'GRADUATE':
         model = GRADUATE(conformer_class=opt.conformer_class, d_ffn=opt.d_ffn, nhead=opt.nhead, d_model=opt.d_model, enc_layers=opt.enc_layers, 
-                    dec_layers=opt.dec_layers, rep_KV=rep_KV, label_type=opt.label_type, recover_type=opt.recover_type, 
+                    dec_layers=opt.dec_layers, rep_KV=opt.rep_KV, label_type=opt.label_type, recover_type=opt.recover_type, 
                     max_freq=opt.max_freq, wavelength=opt.wavelength, stft_recovertype=opt.stft_recovertype,
                     dualDomain_type=opt.dualDomain_type, ablation=opt.ablation)
     

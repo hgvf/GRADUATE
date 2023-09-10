@@ -58,20 +58,20 @@ def parse_args():
     parser.add_argument('--loading_method', type=str, default='full')
     
     # custom hyperparameters
-    parser.add_argument('--conformer_class', type=int, default=16)
-    parser.add_argument('--d_ffn', type=int, default=256)
+    parser.add_argument('--conformer_class', type=int, default=8)
+    parser.add_argument('--d_ffn', type=int, default=128)
     parser.add_argument('--d_model', type=int, default=12)
     parser.add_argument('--nhead', type=int, default=4)
-    parser.add_argument('--enc_layers', type=int, default=4)
-    parser.add_argument('--dec_layers', type=int, default=4)
+    parser.add_argument('--enc_layers', type=int, default=2)
+    parser.add_argument('--dec_layers', type=int, default=1)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--label_type', type=str, default='all')
 
     # GRADUATE model
-    parser.add_argument('--rep_KV', type=str, default='False')
-    parser.add_argument('--recover_type', type=str, default='crossattn')
+    parser.add_argument('--rep_KV', type=bool, default=False)
+    parser.add_argument('--recover_type', type=str, default='conv')
     parser.add_argument('--wavelength', type=int, default=3000)
-    parser.add_argument('--stft_recovertype', type=str, default='crossattn')
+    parser.add_argument('--stft_recovertype', type=str, default='conv')
     parser.add_argument('--dualDomain_type', type=str, default='concat')
     parser.add_argument('--ablation', type=str, default='none')
 
@@ -214,19 +214,19 @@ def train(model, optimizer, dataloader, valid_loader, device, cur_epoch, opt, eq
     train_loop = tqdm(enumerate(dataloader), total=len(dataloader))
     for idx, (data) in train_loop:        
         if opt.model_opt == 'GRADUATE':
-            out_seg, out = model(data['X'].to(device), stft=data['stft'].float().to(device))
+            out = model(data['X'].to(device), stft=data['stft'].float().to(device))
         else:
             out = model(data['X'].to(device))
             
-            if opt.model_opt == 'GRADUATE':
-                if opt.label_type == 'p' or opt.label_type == 'other':
-                    loss = loss_fn(opt, pred=out, gt=data['y'], device=device)
-                elif opt.label_type == 'all':
-                    loss = loss_fn(opt, pred=out, gt=(data['y'], data['detections']), device=device)
-            elif opt.model_opt == 'eqt':
-                loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
-            else:
-                loss = loss_fn(opt, out, data['y'], device)
+        if opt.model_opt == 'GRADUATE':
+            if opt.label_type == 'p' or opt.label_type == 'other':
+                loss = loss_fn(opt, pred=out, gt=data['y'], device=device)
+            elif opt.label_type == 'all':
+                loss = loss_fn(opt, pred=out, gt=(data['y'], data['detections']), device=device)
+        elif opt.model_opt == 'eqt':
+            loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
+        else:
+            loss = loss_fn(opt, out, data['y'], device)
 
         loss = loss / opt.gradient_accumulation
         loss.backward()
@@ -257,20 +257,20 @@ def valid(model, dataloader, device, cur_epoch, opt, eqt_reg=None):
     for idx, data in valid_loop:
         with torch.no_grad():               
             if opt.model_opt == 'GRADUATE':
-                out_seg, out = model(data['X'].to(device), stft=data['stft'].float().to(device))
+                out = model(data['X'].to(device), stft=data['stft'].float().to(device))
             else:
                 out = model(data['X'].to(device))
 
-            if opt.model_opt == 'GRADUATE':
-                if opt.label_type == 'p' or opt.label_type == 'other':
-                    loss = loss_fn(opt, pred=out, gt=data['y'], device=device)
-                elif opt.label_type == 'all':
-                    loss = loss_fn(opt, pred=out, gt=(data['y'], data['detections']), device=device)
-                elif opt.model_opt == 'eqt':
-                    loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
-                else:
-                    loss = loss_fn(opt, out, data['y'], device)
-            
+        if opt.model_opt == 'GRADUATE':
+            if opt.label_type == 'p' or opt.label_type == 'other':
+                loss = loss_fn(opt, pred=out, gt=data['y'], device=device)
+            elif opt.label_type == 'all':
+                loss = loss_fn(opt, pred=out, gt=(data['y'], data['detections']), device=device)
+            elif opt.model_opt == 'eqt':
+                loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
+            else:
+                loss = loss_fn(opt, out, data['y'], device)
+        
         dev_loss = dev_loss + loss.detach().cpu().item()
         
         valid_loop.set_description(f"[Valid Epoch {cur_epoch+1}/{opt.epochs}]")
@@ -280,12 +280,23 @@ def valid(model, dataloader, device, cur_epoch, opt, eqt_reg=None):
 
     return valid_loss
 
+def save_after_train(output_dir, epoch, model, optimizer, min_loss):
+    # save every epoch
+    targetPath = os.path.join(output_dir, f"model_epoch{epoch}.pt")
+
+    torch.save({
+        'model': model.state_dict(),
+        'optimizer': optimizer,
+        'min_loss': min_loss,
+        'epoch': epoch
+    }, targetPath)
+
 if __name__ == '__main__':
     opt = parse_args()
 
     output_dir = os.path.join('./results', opt.save_path)
     if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+        os.makedirs(output_dir)
 
     log_path = os.path.join(output_dir, 'train.log')
     logging.basicConfig(format="%(asctime)s | %(levelname)s | %(message)s",
@@ -362,10 +373,8 @@ if __name__ == '__main__':
         init_epoch = 0
         min_loss = 100000
 
-    stage, early_stop_cnt, schedule_cnt = opt.init_stage, 0, 0
+    early_stop_cnt = 0
     prev_loss, valid_loss = 1000, 1000
-    isNext = False
-    isTaiwanAug = False
     for epoch in range(init_epoch, opt.epochs):
         # Load the dataset again
         if early_stop_cnt >= 4 and opt.model_opt == 'GRADUATE': 
@@ -390,6 +399,7 @@ if __name__ == '__main__':
             scheduler.step(valid_loss)
         else:
             train_loss = train(model, optimizer, train_loader, dev_loader, device, epoch, opt, output_dir)
+            save_after_train(output_dir, epoch, model, optimizer, min_loss)
             valid_loss = valid(model, dev_loader, device, epoch, opt)
 
         print('[Train] epoch: %d -> loss: %.4f' %(epoch+1, train_loss))
@@ -426,10 +436,10 @@ if __name__ == '__main__':
             print(f"Validation loss improved from {min_loss} to {valid_loss}...")
         else:
             early_stop_cnt += 1
-            print('Early stopping cnt: ', early_stop_cnt)
+            print('Validation loss did not improve, early stopping cnt: ', early_stop_cnt)
 
         # Saving model
-        targetPath = os.path.join(output_dir, opt.model_name+'.pt')
+        targetPath = os.path.join(output_dir, 'checkpoint_last.pt')
         torch.save({
             'model': model.state_dict(),
             'optimizer': optimizer,
