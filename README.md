@@ -19,6 +19,10 @@ $ pip install .
 ```
 
 ---
+### Loading the dataset to the Seisbench format
+* 更改資料路徑
+* utils.py -> load_dataset() -> 裡面所有 kwargs 的 ```download_kwargs```，改為對應的資料集路徑
+
 ### Training
 * Model arguments:
   - **Time domain branch**: ```conformer_class```, ```d_ffn```, ```d_model```, ```nhead```, ```enc_layers```, ```dropout```
