@@ -1,6 +1,11 @@
 # GRADUATE
 
 ## Installation
+### Step0. Clone the repository
+```shell
+$ git clone https://github.com/hgvf/GRADUATE.git
+```
+
 ### Step1. Create a new Anaconda virtual environment
 ```shell
 $ conda create --name GRADUATE python=3.8
