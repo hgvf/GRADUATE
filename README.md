@@ -28,6 +28,10 @@ $ pip install .
 * 更改資料路徑
 * utils.py -> load_dataset() -> 裡面所有 kwargs 的 ```download_kwargs```，改為對應的資料集路徑
 
+### (Optional) Replace the line notify token
+* 如果要用 Line notify 的話，要去改 line notify token，不然都發到我的群組= =
+* train.py or find_threshold.py -> toLine() -> 裡面的 ```token``` 改成自己的
+
 ### Training
 * Model arguments:
   - **Time domain branch**: ```conformer_class```, ```d_ffn```, ```d_model```, ```nhead```, ```enc_layers```, ```dropout```
