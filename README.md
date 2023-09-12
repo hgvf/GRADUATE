@@ -24,15 +24,16 @@ $ pip install .
 ```
 
 ---
-### Loading the dataset to the Seisbench format
+## Loading the dataset to the Seisbench format
 * 更改資料路徑
 * utils.py -> load_dataset() -> 裡面所有 kwargs 的 ```download_kwargs```，改為對應的資料集路徑
 
-### (Optional) Replace the line notify token
+## (Optional) Replace the line notify token
 * 如果要用 Line notify 的話，要去改 line notify token，不然都發到我的群組= =
 * train.py & find_threshold.py -> toLine() -> 裡面的 ```token``` 改成自己的
+---
 
-### Training
+## Training
 * Model arguments:
   - **Time domain branch**: ```conformer_class```, ```d_ffn```, ```d_model```, ```nhead```, ```enc_layers```, ```dropout```
   - **Time-frequency domain branch**: ```stft_recovertype```, ```max_freq```
@@ -49,7 +50,7 @@ $ pip install .
 $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore train.py <arguments>...
 ```
 
-### Evaluate the picker
+## Evaluate the picker
 * Scenario 1: Finding the best criteria on validation set
 
 ```shell
@@ -68,7 +69,7 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
   --p_timestep <fixed-parrival-at-timestep> --do_test True <arguments>...
 ```
 
-### Testing the model on different P-arrival time
+## Testing the model on different P-arrival time
 * Arguments:
   - **Testing on multiple P-phase arrival**: ```allTest```
 
@@ -79,7 +80,7 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
 ```
 
 ---
-### (Appendix) Using different characteristic of dataset for analyzing the model
+## (Appendix) Using different characteristic of dataset for analyzing the model
 * 自己研究
 
 ```shell
