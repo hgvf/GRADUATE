@@ -216,7 +216,7 @@ def basic_augmentations(opt, phase_dict, ptime=None, test=False, EEW=False):
                     sbg.ProbabilisticLabeller(label_columns=phase_dict, sigma=20, dim=0),
                     sbg.DetectionLabeller(p_phases, s_phases, key=("X", "detections"), factor=1.4)
                 ]
-    elif opt.model_opt == 'our' or opt.model_opt == 'our_noTF':
+    elif opt.model_opt == 'GRADUATE' or opt.model_opt == 'GRADUATE_noTF':
         if opt.label_type == 'all':
             phase_dict = [p_phases, s_phases]
         else:
@@ -307,14 +307,14 @@ def load_model(opt, device):
 
     if opt.model_opt == 'eqt':
         model = sbm.EQTransformer(in_samples=opt.wavelength)
-    elif opt.model_opt == 'our':
+    elif opt.model_opt == 'GRADUATE':
         model = GRADUATE(conformer_class=8, d_ffn=128, nhead=4, d_model=12, enc_layers=2, 
                     encoder_type='conformer', dec_layers=1, norm_type='123', l=1, cross_attn_type=4, 
                     decoder_type='crossattn', rep_KV=True, seg_proj_type='none',
                     label_type='all', recover_type='conv', rep_query=False, input_type='normal', 
                     stft_loss=False, patch_crossattn=False, max_freq=opt.max_freq, wavelength=opt.wavelength, stft_recovertype='conv',
                     stft_residual=False, dualDomain_type='concat', ablation='none')
-    elif opt.model_opt == 'our_noTF':
+    elif opt.model_opt == 'GRADUATE_noTF':
         model = GRADUATE(conformer_class=8, d_ffn=128, nhead=4, d_model=12, enc_layers=2, 
                     encoder_type='conformer', dec_layers=1, norm_type='123', l=1, cross_attn_type=4, 
                     decoder_type='crossattn', rep_KV=True, seg_proj_type='none',
