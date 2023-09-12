@@ -5,10 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import seisbench
 from seisbench import config
-import sys
-# sys.path.append('../RED-PAN')
-sys.path.append('/mnt/disk4/weiwei/RED-PAN/')
-from gen_tar import *
+
 
 class SupervisedLabeller(ABC):
     """

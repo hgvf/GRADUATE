@@ -5,9 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import warnings
-import sys
-sys.path.append('/home/weiwei/disk4/picking_baseline')
-from conformer import *
 
 # For implementation, potentially follow: https://medium.com/huggingface/from-tensorflow-to-pytorch-265f40ef2a28
 class EQTransformer(WaveformModel):
