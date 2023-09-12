@@ -104,6 +104,7 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
   <arguments>...
 ```
 
+---
 ## Channel or Location adaption on CWB
 * Arguments:
   - **Select the pretrained checkpoint**: ```pretrained_path```
@@ -121,6 +122,24 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
   --pretrained_path <path-to-pretrained-checkpoint> \
   --instrument <type-of-channel> \
   --location <type-of-location> \
+  <arguments>...
+```
+
+---
+## Ablation study
+* Arguments:
+  - **Select the module to remove**: ```ablation```
+ 
+* 2 scenarios:
+  - ```ablation```= 'time', remove the time domain branch
+  - ```ablation```= 'time-frequency', remove the time-frequency domain branch
+
+```shell
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore train.py \
+  --config_path <path-to-config-path> \
+  --save_path <path-to-checkpoint> \
+  --ablation <module-to-remove> \
   <arguments>...
 ```
 
