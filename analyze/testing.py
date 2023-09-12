@@ -32,6 +32,8 @@ def parse_args():
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--plot', type=bool, default=False)
+    parser.add_argument('--plot_tp', type=bool, default=False)
+    parser.add_argument('--max_plot', type=int, default=-1)
 
     parser.add_argument('--wavelength', type=int, default=3000)
     parser.add_argument('--max_freq', type=int, default=12)
@@ -231,7 +233,7 @@ def evaluation(pred, gt, threshold_prob, threshold_trigger, threshold_type):
     return tp, fp, tn, fn, diff, abs_diff, res, fn_idx, fp_idx
 
 def plot(opt, test_loader, pred, fn_idx, fp_idx, res):
-    max_plot = 200
+    max_plot = opt.max_plot if opt.max_plot != -1 else 100
     plot_cnt = 0
     with tqdm(test_loader) as epoch:
         idx = 0
@@ -239,33 +241,33 @@ def plot(opt, test_loader, pred, fn_idx, fp_idx, res):
             if plot_cnt >= max_plot:
                 break
 
-            if idx in fn_idx or idx in fp_idx:
+            if (idx in fn_idx or idx in fp_idx) or (opt.plot_tp and res[idx] == 'tp'):
                 pred_trigger = np.argmax(pred[idx])
 
                 plt.figure(figsize=(12, 18))
                 plt.subplot(511)
                 plt.title('Z')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 0])
 
                 plt.subplot(512)
                 plt.title('N')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 1])
 
                 plt.subplot(513)
                 plt.title('E')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 2])
 
                 plt.subplot(514)
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                     plt.title(f'Prediction: {int(pred_trigger)}')
                 else:
@@ -278,7 +280,7 @@ def plot(opt, test_loader, pred, fn_idx, fp_idx, res):
                 plt.subplot(515)
                 plt.plot(data['y'][0, 0])
                 plt.ylim([-0.05, 1.05])
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     gt_trigger = np.argmax(data['y'][0, 0])
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                     plt.title(f'Ground-truth: {int(gt_trigger)}')
@@ -304,7 +306,7 @@ def plot(opt, test_loader, pred, fn_idx, fp_idx, res):
             idx += 1
             
 def plot_zoomin(opt, test_loader, pred, fn_idx, fp_idx, res):
-    max_plot = 200
+    max_plot = opt.max_plot if opt.max_plot != -1 else 100
     plot_cnt = 0
     with tqdm(test_loader) as epoch:
         idx = 0
@@ -312,7 +314,8 @@ def plot_zoomin(opt, test_loader, pred, fn_idx, fp_idx, res):
             if plot_cnt >= max_plot:
                 break
             flag1, flag2 = False, False
-            if idx in fn_idx or idx in fp_idx:
+
+            if (idx in fn_idx or idx in fp_idx) or (opt.plot_tp and res[idx] == 'tp'):
                 pred_trigger = int(np.argmax(pred[idx]))
 
                 if pred_trigger - 250 < 0:
@@ -336,27 +339,27 @@ def plot_zoomin(opt, test_loader, pred, fn_idx, fp_idx, res):
                 plt.figure(figsize=(12, 18))
                 plt.subplot(511)
                 plt.title('Z')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 0, start:end])
 
                 plt.subplot(512)
                 plt.title('N')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 1, start:end])
 
                 plt.subplot(513)
                 plt.title('E')
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.legend()
                 plt.plot(data['X'][0, 2, start:end])
 
                 plt.subplot(514)
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.title('Prediction')
                 plt.ylabel('Probability')
@@ -367,7 +370,7 @@ def plot_zoomin(opt, test_loader, pred, fn_idx, fp_idx, res):
                 plt.subplot(515)
                 plt.plot(data['y'][0, 0, start:end])
                 plt.ylim([-0.05, 1.05])
-                if res[idx] == 'fp':
+                if res[idx] == 'fp' or res[idx] == 'tp':
                     gt_trigger = np.argmax(data['y'][0, 0])
                     plt.axvline(x=int(pred_trigger), color='r', label='Prediction')
                 plt.title('Ground-truth')
@@ -418,7 +421,7 @@ if __name__ == '__main__':
     plot_path = f"./plot/{opt.model_opt}_{opt.dataset_opt}" 
     print('Saving png files at -> ', plot_path)
     if not os.path.exists(plot_path):
-        os.makedirs(plot_path)
+        os.mkdir(plot_path)
 
     # load datasets
     print('loading datasets')
