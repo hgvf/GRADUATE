@@ -30,7 +30,7 @@ $ pip install .
 
 ### (Optional) Replace the line notify token
 * 如果要用 Line notify 的話，要去改 line notify token，不然都發到我的群組= =
-* train.py or find_threshold.py -> toLine() -> 裡面的 ```token``` 改成自己的
+* train.py & find_threshold.py -> toLine() -> 裡面的 ```token``` 改成自己的
 
 ### Training
 * Model arguments:
