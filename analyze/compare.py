@@ -31,7 +31,7 @@ if __name__ == '__main__':
     path_A = f"./plot/{opt.compareA}"
     path_B = f"./plot/{opt.compareB}"
 
-    logpath = f"./log/compare_{opt.compareA}_{opt.compareB}.log"
+    logpath = f"./log/compare.log"
 
     filesA = os.listdir(f"{path_A}")
     filesB = os.listdir(f"{path_B}")

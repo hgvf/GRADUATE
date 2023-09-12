@@ -10,6 +10,7 @@ import time
 import bisect
 import requests
 from tqdm import tqdm
+from argparse import Namespace
 
 import sys
 sys.path.append('./eqt')
@@ -30,6 +31,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--save_path", type=str, default='tmp')
+    parser.add_argument('--config_path', type=str, default='none')
     parser.add_argument('--load_specific_model', type=str, default='None')
     parser.add_argument("--threshold_type", type=str, default='all')
     parser.add_argument('--threshold_prob_start', type=float, default=0.15)
@@ -47,15 +49,14 @@ def parse_args():
     parser.add_argument('--level', type=int, default=-1)
     parser.add_argument('--instrument', type=str, default='all')
     parser.add_argument('--location', type=int, default=-1)
-    parser.add_argument('--max_freq', type=int, default=32)
     parser.add_argument("--filter_instance", type=bool, default=False)
     parser.add_argument("--device", type=str, default='cpu')
     parser.add_argument("--batch_size", type=int, default=100)
 
     # seisbench options
     parser.add_argument('--model_opt', type=str, default='none')
-    parser.add_argument('--loss_weight', type=float, default=50)
-    parser.add_argument('--dataset_opt', type=str, default='taiwan')
+    parser.add_argument('--loss_weight', type=float, default=10)
+    parser.add_argument('--dataset_opt', type=str, default='cwb')
     parser.add_argument('--loading_method', type=str, default='full')
     
     # custom hyperparameters
@@ -66,17 +67,28 @@ def parse_args():
     parser.add_argument('--enc_layers', type=int, default=2)
     parser.add_argument('--dec_layers', type=int, default=1)
     parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--label_type', type=str, default='p')
+    parser.add_argument('--label_type', type=str, default='all')
 
     # GRADUATE model
-    parser.add_argument('--rep_KV', type=str, default='False')
-    parser.add_argument('--recover_type', type=str, default='crossattn')
+    parser.add_argument('--rep_KV', type=bool, default=False)
+    parser.add_argument('--max_freq', type=int, default=12)
+    parser.add_argument('--recover_type', type=str, default='conv')
     parser.add_argument('--wavelength', type=int, default=3000)
-    parser.add_argument('--stft_recovertype', type=str, default='crossattn')
+    parser.add_argument('--stft_recovertype', type=str, default='conv')
     parser.add_argument('--dualDomain_type', type=str, default='concat')
     parser.add_argument('--ablation', type=str, default='none')
 
     opt = parser.parse_args()
+
+    # load the config 
+    if opt.config_path != 'none':
+        f = open(opt.config_path, 'r')
+        config = json.load(f)
+
+        opt = vars(opt)
+        opt.update(config)
+
+        opt = Namespace(**opt)
 
     return opt
 
