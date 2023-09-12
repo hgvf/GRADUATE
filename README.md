@@ -60,7 +60,7 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
   <arguments>...
 ```
 
-* (Optional) Scenario 2: Testing the model on testing set only 
+* (Optional) Scenario 2: Testing the model with custom picking criteria on testing set only 
 ```shell
 $ python average_checkpoints.py --save_path <checkpoint-name> -n <number-of-checkpoints-to-average>
 
