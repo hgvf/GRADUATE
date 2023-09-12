@@ -30,11 +30,13 @@ $ pip install .
 
 ## Setting the cache path of the Seisbench (Important!!!)
 * 修改 seisbench 下載資料的預設路徑，不然可能會在家目錄
-* [Seisbench 初始檔](https://github.com/hgvf/GRADUATE/blob/master/seisbench/seisbench/__init__.py) 的 ```cache_root```
+* ./seisbench/seisbench/\_\_init\_\_.py 的 ```cache_root```
+* ex. 修改 [Seisbench 初始檔](https://github.com/hgvf/GRADUATE/blob/master/seisbench/seisbench/__init__.py) 的 ```cache_root```
 
 ## (Optional) Replace the line notify token
 * 如果要用 Line notify 的話，要去改 line notify token，不然都發到我的群組= =
 * train.py & find_threshold.py -> toLine() -> 裡面的 ```token``` 改成自己的
+
 ---
 
 ## Training
