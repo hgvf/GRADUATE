@@ -46,8 +46,20 @@ $ pip install .
   - **Dataset**: ```dataset_opt```
   - **Model type**: ```model_opt```
 
+* Scenario 1: Training with your own hyperparameters
 ```shell
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore train.py <arguments>...
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore train.py \
+  <arguments>...
+```
+
+* Scenario 2: Training with predefined hyperparameters
+```shell
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore train.py \
+  --config_path <path-to-config-path> \
+  --save_path <path-to-checkpoint> \
+  <arguments>...
 ```
 
 ## Evaluate the picker
@@ -56,7 +68,9 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
 ```shell
 $ python average_checkpoints.py --save_path <checkpoint-name> -n <number-of-checkpoints-to-average>
 
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --load_specific_model averaged_checkpoint/
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore find_threshold.py \
+  --load_specific_model averaged_checkpoint \
   <arguments>...
 ```
 
@@ -64,9 +78,15 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
 ```shell
 $ python average_checkpoints.py --save_path <checkpoint-name> -n <number-of-checkpoints-to-average>
 
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --load_specific_model averaged_checkpoint/
-  --threshold_type <type-of-threshold> --threshold_prob_start <probability-of-threshold> --threshold_trigger_start <trigger-sample-of-threshold>/
-  --p_timestep <fixed-parrival-at-timestep> --do_test True <arguments>...
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore find_threshold.py \
+  --load_specific_model averaged_checkpoint \
+  --threshold_type <type-of-threshold> \
+  --threshold_prob_start <probability-of-threshold> \
+  --threshold_trigger_start <trigger-sample-of-threshold> \
+  --p_timestep <fixed-parrival-at-timestep> \
+  --do_test True \
+  <arguments>...
 ```
 
 ## Testing the model on different P-arrival time
@@ -74,8 +94,33 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> p
   - **Testing on multiple P-phase arrival**: ```allTest```
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> python -W ignore find_threshold.py --allTest True --load_specific_model averaged_checkpoint/
-  --threshold_type <type-of-criteria> --threshold_prob_start <prob-of-criteria> --threshold_trigger_start <trigger-sample-of-criteria>\
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore find_threshold.py \
+  --allTest True \
+  --load_specific_model averaged_checkpoint \
+  --threshold_type <type-of-criteria> \
+  --threshold_prob_start <prob-of-criteria> \
+  --threshold_trigger_start <trigger-sample-of-criteria> \
+  <arguments>...
+```
+
+## Channel or Location adaption on CWB
+* Arguments:
+  - **Select the pretrained checkpoint**: ```pretrained_path```
+  - **Select the types of data**: ```location```, ```instrument```
+ 
+* 6 types of data:
+  - **Channel**: ```instrument``` -> HH, HL, or EH (dtype=str)
+  - **Location**: ```location``` -> 10 (surface), 0 (borehole), or 20 (seabed) (dtype=int)
+
+```shell
+$ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
+  python -W ignore train.py \
+  --config_path <path-to-config-path> \
+  --save_path <path-to-checkpoint> \
+  --pretrained_path <path-to-pretrained-checkpoint> \
+  --instrument <type-of-channel> \
+  --location <type-of-location> \
   <arguments>...
 ```
 
