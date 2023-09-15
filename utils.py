@@ -27,7 +27,7 @@ def load_dataset(opt):
         kwargs={'download_kwargs': {'basepath': '/mnt/nas3/earthquake_dataset_large/script/STEAD/'}}
         stead = sbd.STEAD(**kwargs)
 
-        stead = apply_filter(stead, snr_threshold=opt.snr_threshold, isStead=True)
+        stead = apply_filter(stead, isStead=True)
 
     if opt.dataset_opt == 'cwbsn' or opt.dataset_opt == 'cwb' or opt.dataset_opt == 'all':
         # CWBSN 

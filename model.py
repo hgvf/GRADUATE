@@ -117,8 +117,8 @@ class cross_attn_layer(nn.Module):
 
 class GRADUATE(nn.Module):
     def __init__(self, ablation, conformer_class, d_ffn, nhead, d_model, enc_layers, dec_layers,  
-                 rep_KV=True, label_type='all', recover_type="crossattn", wavelength=3000,
-                 max_freq=12, stft_recovertype='crossattn', dualDomain_type='concat'):
+                 rep_KV=True, label_type='all', recover_type="conv", wavelength=3000,
+                 max_freq=12, stft_recovertype='conv', dualDomain_type='concat'):
         super(GRADUATE, self).__init__()
         
         dim_stft = max_freq
