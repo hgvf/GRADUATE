@@ -388,9 +388,11 @@ if __name__ == '__main__':
 
     early_stop_cnt = 0
     prev_loss, valid_loss = 1000, 1000
+    reload_dataset = False
     for epoch in range(init_epoch, opt.epochs):
         # Load the dataset again
-        if early_stop_cnt >= 4 and opt.model_opt == 'GRADUATE': 
+        if early_stop_cnt >= 4 and opt.model_opt == 'GRADUATE' and not reload_dataset: 
+            reload_dataset = True
             early_stop_cnt -= 1
             train_set, dev_set = split_dataset(opt)
     
