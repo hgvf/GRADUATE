@@ -388,8 +388,7 @@ def inference(opt, model, test_loader, device):
                 else:
                     pred += [out]
                     gt += [target]
-            if idx > 5:
-                break
+
     return pred, gt, snr_total, intensity_total
 
 def score(pred, gt, snr_total, intensity_total, mode, opt, threshold_prob, threshold_trigger, isTest=False):
