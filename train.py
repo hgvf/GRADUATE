@@ -279,10 +279,10 @@ def valid(model, dataloader, device, cur_epoch, opt, eqt_reg=None):
                 loss = loss_fn(opt, pred=out, gt=data['y'], device=device)
             elif opt.label_type == 'all':
                 loss = loss_fn(opt, pred=out, gt=(data['y'], data['detections']), device=device)
-            elif opt.model_opt == 'eqt':
-                loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
-            else:
-                loss = loss_fn(opt, out, data['y'], device)
+        elif opt.model_opt == 'eqt':
+            loss = loss_fn(opt, out, (data['y'], data['detections']), device, eqt_regularization=(model, eqt_reg))
+        else:
+            loss = loss_fn(opt, out, data['y'], device)
         
         dev_loss = dev_loss + loss.detach().cpu().item()
         
