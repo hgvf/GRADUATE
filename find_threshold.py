@@ -38,7 +38,8 @@ def parse_args():
     parser.add_argument('--threshold_prob_end', type=float, default=0.9)
     parser.add_argument('--threshold_trigger_start', type=int, default=5)
     parser.add_argument('--threshold_trigger_end', type=int, default=45)
-    parser.add_argument('--sample_tolerant', type=int, default=50)
+    parser.add_argument('--sample_tolerant_front', type=int, default=50)
+    parser.add_argument('--sample_tolerant_end', type=int, default=50)
     parser.add_argument('--do_test', type=bool, default=False)
     parser.add_argument('--p_timestep', type=int, default=750)
     parser.add_argument('--allTest', type=bool, default=False)
@@ -116,11 +117,13 @@ def toLine(save_path, precision, recall, fscore, mean, variance):
     except Exception as e:
         print(e)
 
-def evaluation(pred, gt, snr_idx, snr_max_idx, intensity_idx, intensity_max_idx, threshold_prob, threshold_trigger, sample_tolerant, mode):
+def evaluation(pred, gt, snr_idx, snr_max_idx, intensity_idx, intensity_max_idx, threshold_prob, threshold_trigger, sample_tolerant, wavelength, mode):
     tp, fp, tn, fn = 0, 0, 0, 0 
     diff = []
     abs_diff = []
     res = []
+    total_diff = []
+    sample_tolerant_front, sample_tolerant_end = sample_tolerant
 
     # snr stat
     snr_stat = {}
@@ -195,8 +198,8 @@ def evaluation(pred, gt, snr_idx, snr_max_idx, intensity_idx, intensity_max_idx,
             else:
                 pred_trigger = 0
 
-        left_edge = (gt_trigger - sample_tolerant) if (gt_trigger - sample_tolerant) >= 0 else 0
-        right_edge = (gt_trigger + sample_tolerant) if (gt_trigger + sample_tolerant) <= 3000 else 2999
+        left_edge = (gt_trigger - sample_tolerant_front) if (gt_trigger - sample_tolerant_front) >= 0 else 0
+        right_edge = (gt_trigger + sample_tolerant_end) if (gt_trigger + sample_tolerant_end) <= wavelength else wavelength-1
 
         # case positive 
         if (pred_trigger >= left_edge) and (pred_trigger <= right_edge) and (pred_isTrigger) and (gt_isTrigger):
@@ -225,12 +228,17 @@ def evaluation(pred, gt, snr_idx, snr_max_idx, intensity_idx, intensity_max_idx,
         if gt_isTrigger and pred_isTrigger:
             diff.append(pred_trigger-gt_trigger)
             abs_diff.append(abs(pred_trigger-gt_trigger))
+            total_diff.append(abs(pred_trigger-gt_trigger))
+        elif gt_isTrigger and not pred_isTrigger:
+            total_diff.append(-1)
+        else:
+            total_diff.append(-2)
 
         case_stat['snr'].append(str(snr_cur))
         case_stat['intensity'].append(str(intensity_cur))
         case_stat['res'].append(res[i])
 
-    return tp, fp, tn, fn, diff, abs_diff, res, snr_stat, intensity_stat, case_stat
+    return tp, fp, tn, fn, diff, abs_diff, res, snr_stat, intensity_stat, case_stat, total_diff
 
 def set_generators(opt, ptime=None):
     cwbsn, tsmip, stead, cwbsn_noise, instance = load_dataset(opt)
@@ -400,7 +408,7 @@ def score(pred, gt, snr_total, intensity_total, mode, opt, threshold_prob, thres
     snr_idx = convert_snr_to_level(snr_level, snr_total)
     intensity_idx = convert_intensity_to_level(intensity_level, intensity_total)
         
-    tp, fp, tn, fn, diff, abs_diff, res, snr_stat, intensity_stat, case_stat = evaluation(pred, gt, snr_idx, len(snr_level), intensity_idx, len(intensity_level), threshold_prob, threshold_trigger, opt.sample_tolerant, mode)
+    tp, fp, tn, fn, diff, abs_diff, res, snr_stat, intensity_stat, case_stat, total_diff = evaluation(pred, gt, snr_idx, len(snr_level), intensity_idx, len(intensity_level), threshold_prob, threshold_trigger, (opt.sample_tolerant_front, opt.sample_tolerant_end), opt.wavelength, mode)
     
     # statisical  
     precision = tp / (tp+fp) if (tp+fp) != 0 else 0
@@ -412,9 +420,10 @@ def score(pred, gt, snr_total, intensity_total, mode, opt, threshold_prob, thres
     logging.info('======================================================')
     logging.info('threshold_prob: %.2f' %(threshold_prob))
     logging.info('threshold_trigger: %d' %(threshold_trigger))
+    logging.info('sample tolerant: (%d, %d)' %(opt.sample_tolerant_front, opt.sample_tolerant_end))
     logging.info('TPR=%.4f, FPR=%.4f, Precision=%.4f, Fscore=%.4f' %(recall, fpr, precision, fscore))
     logging.info('tp=%d, fp=%d, tn=%d, fn=%d' %(tp, fp, tn, fn))
-    logging.info('abs_diff=%.4f, diff=%.4f' %(np.mean(abs_diff)/100, np.mean(diff)/100))
+    logging.info('abs_diff_mean=%.4f, abs_diff_std=%.4f' %(np.mean(abs_diff)/100, np.std(abs_diff)/100))
     logging.info('trigger_mean=%.4f, trigger_std=%.4f' %(np.mean(diff)/100, np.std(diff)/100))
     # logging.info('MCC=%.4f' %(mcc))
     logging.info('RMSE=%.4f, MAE=%.4f' %(np.sqrt(np.mean(np.array(diff)**2))/100, np.mean(abs_diff)/100))
@@ -422,7 +431,7 @@ def score(pred, gt, snr_total, intensity_total, mode, opt, threshold_prob, thres
     if isTest:
         toLine(opt.save_path, precision, recall, fscore, np.mean(diff)/100, np.std(diff)/100)
 
-    return fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat
+    return fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat, total_diff
 
 if __name__ == '__main__':
     torch.multiprocessing.set_sharing_strategy('file_system')
@@ -456,7 +465,8 @@ if __name__ == '__main__':
     if opt.location != -1:
         subpath = subpath + '_' + str(opt.location)
         output_dir = f"{output_dir}_{opt.location}"
-    
+    subpath = f"{subpath}_{opt.sample_tolerant_front}_{opt.sample_tolerant_end}"
+
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
@@ -494,13 +504,13 @@ if __name__ == '__main__':
         model_path = os.path.join(model_dir, 'checkpoint_last.pt')
 
     checkpoint = torch.load(model_path, map_location=device)
-    model.load_state_dict(checkpoint['model'], strict=False)
+    model.load_state_dict(checkpoint['model'])
     
     # start finding
     max_fscore = 0.0
     cnt = 0
-    front = opt.sample_tolerant
-    back = opt.sample_tolerant
+    front = opt.sample_tolerant_front
+    back = opt.sample_tolerant_end
 
     if opt.threshold_type == 'all':
         mode = ['max', 'single', 'continue', 'avg']  # avg, continue
@@ -532,7 +542,7 @@ if __name__ == '__main__':
                 cnt = 0
 
                 for trigger in np.arange(opt.threshold_trigger_start, opt.threshold_trigger_end, 5): # (10, 55)
-                    fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat = score(pred, gt, snr_total, intensity_total, m, opt, prob, trigger)
+                    fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat, total_diff = score(pred, gt, snr_total, intensity_total, m, opt, prob, trigger)
                     print('prob: %.2f, trigger: %d, fscore: %.4f' %(prob, trigger, fscore))
 
                     if fscore > max_fscore:
@@ -545,6 +555,9 @@ if __name__ == '__main__':
                         break
 
                     if fscore > best_fscore:
+                        with open(os.path.join(output_dir, 'total_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
+                            pickle.dump(total_diff, f)
+
                         with open(os.path.join(output_dir, 'abs_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
                             pickle.dump(abs_diff, f)
 
@@ -582,9 +595,12 @@ if __name__ == '__main__':
         logging.info('Inference on testing set')
         pred, gt, snr_total, intensity_total = inference(opt, model, test_loader, device)
 
-        fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat = score(pred, gt, snr_total, intensity_total, best_mode, opt, best_prob, best_trigger, True)
+        fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat, total_diff = score(pred, gt, snr_total, intensity_total, best_mode, opt, best_prob, best_trigger, True)
         print('fscore: %.4f' %(fscore))
         
+        with open(os.path.join(output_dir, 'test_total_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
+            pickle.dump(total_diff, f)
+
         with open(os.path.join(output_dir, 'test_abs_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
             pickle.dump(abs_diff, f)
 
@@ -636,9 +652,12 @@ if __name__ == '__main__':
             logging.info('Inference on testing set, ptime: %d' %(ptime))
             pred, gt, snr_total, intensity_total = inference(opt, model, test_loader, device)
 
-            fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat = score(pred, gt, snr_total, intensity_total, best_mode, opt, best_prob, best_trigger, True)
+            fscore, abs_diff, diff, snr_stat, intensity_stat, case_stat, total_diff = score(pred, gt, snr_total, intensity_total, best_mode, opt, best_prob, best_trigger, True)
             print(f"ptime: {ptime}, fscore: {fscore}")
             logging.info('======================================================')
+
+            with open(os.path.join(new_output_dir, 'test_total_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
+                pickle.dump(total_diff, f)
 
             with open(os.path.join(new_output_dir, 'test_abs_diff_'+str(opt.level)+'.pkl'), 'wb') as f:
                 pickle.dump(abs_diff, f)
