@@ -1,6 +1,6 @@
 # GRADUATE
 
-## Installation
+## Installation (Anaconda or Docker)
 ### Step0. Clone the repository
 ```shell
 $ git clone https://github.com/hgvf/GRADUATE.git
@@ -21,6 +21,21 @@ $ pip install -r requirements.txt
 ```shell
 $ cd seisbench
 $ pip install .
+```
+
+### (Optional) Create environment through Docker
+```shell=
+# Build the docker file
+$ docker build -t graduate:v1 .
+
+# Activate the docker container
+$ docker run -dit graduate:v1 bash
+
+# Check the container ID
+$ docker container ls
+
+# Attach container 
+$ docker attach <Container_ID>
 ```
 
 ---
@@ -158,3 +173,14 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
 $ cd analyze
 ```
 
+## STEAD dataset
+* 如果不會自動下載，就先使用最新的 seisbench，利用上面的指令下載 STEAD
+```shell=
+$ pip install seisbench
+```
+
+* 下載完成後再重新載回 custom seisbench
+```shell=
+$ cd seisbench
+$ pip install .
+```
