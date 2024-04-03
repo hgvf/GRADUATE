@@ -166,6 +166,25 @@ $ CUDA_VISIBLE_DEVICES=<gpu-id> taskset -c <cpu-number-start>-<cpu-number_end> \
 ```
 
 ---
+## STA/LTA 
+* Arguments: 
+  - **Thresholds of STA/LTA**: ```threshold_lambda```, ```threshold_short_window```, ```threshold_short_window```
+
+* Algorithm:
+  1. 波形先經過 characteristic function 放大振幅
+  2. 套用 obspy 套件中的 STA/LTA 演算法，檢查有無超過 ```threshold_lambda``` 的數值，視為 picked time
+
+```shell
+# worker 記得設為 0，比較不容易有 bug
+$ python stalta_test.py \
+  --workers 0 \
+  --threshold_lambda <threshold_lambda> \
+  --threshold_short_window <length_of_the_short_term_window> \
+  --threshold_long_window <length_of_the_long_term_window> \
+  <arguments>...
+```
+
+---
 ## (Appendix) Using different characteristic of dataset for analyzing the model
 * 自己研究
 
